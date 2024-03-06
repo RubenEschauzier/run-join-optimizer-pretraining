@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { assert } from 'console';
 
 class ComunicaOptimizerPretraining{
     public engine: any;
@@ -114,8 +113,7 @@ SELECT ?v0 ?v2 ?v3 WHERE {
 }
 `
 
-const testModelDirectory = `/home/reschauz/projects/comunica-join-optimizer-pretraining/packages/
-actor-rdf-join-inner-multi-reinforcement-learning-tree/models/gcn-models`;
+const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "test-model-config");
 
 const runner = new ComunicaOptimizerPretraining();
 const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "query_strings.json"));

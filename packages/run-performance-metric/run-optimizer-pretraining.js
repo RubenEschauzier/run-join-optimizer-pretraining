@@ -99,7 +99,8 @@ SELECT ?v0 ?v2 ?v3 WHERE {
 	?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v2 .
 }
 `;
-const testModelDirectory = `/home/reschauz/projects/comunica-join-optimizer-pretraining/packages/
+const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "test-model-config");
+`/home/reschauz/projects/comunica-join-optimizer-pretraining/packages/
 actor-rdf-join-inner-multi-reinforcement-learning-tree/models/gcn-models`;
 const runner = new ComunicaOptimizerPretraining();
 const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "query_strings.json"));
