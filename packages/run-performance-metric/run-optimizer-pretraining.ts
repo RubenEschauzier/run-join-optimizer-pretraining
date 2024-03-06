@@ -114,6 +114,7 @@ SELECT ?v0 ?v2 ?v3 WHERE {
 `
 
 const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "test-model-config");
+console.log(`Model directory: ${testModelDirectory}`);
 
 const runner = new ComunicaOptimizerPretraining();
 const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "query_strings.json"));
