@@ -5,3 +5,7 @@ export interface IDataSet {
     valQueries: string[];
     valCardinalities: number[];
 }
+export interface ISearchTrainLog {
+    trainLoss: number[];
+    validationError: number[];
+}

@@ -26,6 +26,22 @@ class ComunicaOptimizerPretraining{
       const cardinalities = JSON.parse(fs.readFileSync(cardinalityFileLocation, 'utf8'));
       return cardinalities;
     }
+    
+    public mean(data: number[]){
+      return (data.reduce((a, b) => a + b, 0) / data.length) || 0;
+    }
+    
+    public std(data: number[]) {
+      const n = data.length
+      const mean = data.reduce((a, b) => a + b) / n
+      return Math.sqrt(data.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+    } 
+
+    public scale(data: number[]){
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      return data.map(x => (x-min)/(max-min));
+    }
 
     public createTrainValSplit(queries: string[], cardinalities: number[], trainSize: number){
       if (trainSize > 1 || trainSize < 0){
@@ -83,8 +99,8 @@ class ComunicaOptimizerPretraining{
       optimizer: optimizerOptions,
       lr: number,
       modelDirectory: string
-    ){
-      await this.engine.pretrainOptimizer(
+    ): Promise<ISearchTrainLog> {
+      return await this.engine.pretrainOptimizer(
         trainQueries, 
         trainCardinalities, 
         valQueries,
@@ -97,6 +113,41 @@ class ComunicaOptimizerPretraining{
         modelDirectory    
       );
     }
+
+    public async random_search_hyperparameters(
+      n: number,
+      epochs: number, 
+      lrRange: number[], 
+      batchSizeOptions: number[], 
+      trainQueries: string[], 
+      trainCardinalities: number[], 
+      valQueries: string[],
+      valCardinalities: number[],
+      modelDirectory: string
+    ){
+      const searchTrainLogs: ISearchTrainLog[] = [];
+      for (let i = 0; i<n; i++){
+        const lr = this.randomUniformFromRange(lrRange[0], lrRange[1]);
+        const batchSize = batchSizeOptions[this.randomIntFromRange(0, batchSizeOptions.length)];
+        const rc: number = Math.random();
+        let optimizer: optimizerOptions = 'adam';
+        if (rc > .5){
+          optimizer = 'sgd';
+        }
+        console.log(`Parameters: lr: ${lr}, bs: ${batchSize}, opt: ${optimizer}`);
+        searchTrainLogs.push(await this.runPretraining(trainQueries, trainCardinalities, valQueries, valCardinalities,
+          batchSize, epochs, optimizer, lr, modelDirectory));
+      }
+    }
+
+    public randomUniformFromRange(min: number, max: number){
+      return Math.random() * (max - min) + min;
+    }
+
+    public randomIntFromRange(min: number, max: number){
+      return Math.floor(this.randomUniformFromRange(min, max));
+    }
+    
 }
 
 const queryVal = `SELECT ?v0 ?v2 ?v3 WHERE {
@@ -113,24 +164,30 @@ SELECT ?v0 ?v2 ?v3 WHERE {
 }
 `
 
-const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "test-model-config");
+// TO TEST: 
+// ONEHOT ENCODING
+// DEEPER NETWORK
+// IMPROVE DATA BY REDUCING ISOMORPHISMS
+const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "onehot-encoded-model-config");
 console.log(`Model directory: ${testModelDirectory}`);
 
 const runner = new ComunicaOptimizerPretraining();
 const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "query_strings.json"));
-const cardinalities = runner.readCardinalities(path.join(__dirname, "..", "..", "data", "query_cardinalities.json"));
+const cardinalities: number[] = runner.readCardinalities(path.join(__dirname, "..", "..", "data", "query_cardinalities.json"));
 const dataset = runner.createTrainValSplit(queries, cardinalities, .8);
 runner.createEngine().then(async () => { 
-  runner.runPretraining(
+  console.log(`Number of queries: ${cardinalities.length}, cardinality average: ${runner.mean(runner.scale(cardinalities.map(x => Math.log(x))))} (${runner.std(runner.scale(cardinalities.map(x => Math.log(x))))})`);
+  runner.random_search_hyperparameters(
+    10,
+    10,
+    [0.00001, 0.001],
+    [2, 4, 8, 16, 32, 64, 128],
     dataset.trainQueries,
     dataset.trainCardinalities, 
     dataset.valQueries,
     dataset.valCardinalities,
-    32,
-    100,
-    'adam',
-    0.0001,
-    testModelDirectory);
+    testModelDirectory
+  )
 });
 
 export type optimizerOptions = "adam" | "sgd";
@@ -140,4 +197,9 @@ export interface IDataSet {
   trainCardinalities: number[];
   valQueries: string[];
   valCardinalities: number[];
+}
+
+export interface ISearchTrainLog{
+  trainLoss: number[]
+  validationError: number[]
 }
