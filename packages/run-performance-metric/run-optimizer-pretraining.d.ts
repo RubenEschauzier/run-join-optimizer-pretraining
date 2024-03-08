@@ -6,6 +6,9 @@ export interface IDataSet {
     valCardinalities: number[];
 }
 export interface ISearchTrainLog {
+    lr: number;
+    bSize: number;
+    opt: optimizerOptions;
     trainLoss: number[];
     validationError: number[];
 }

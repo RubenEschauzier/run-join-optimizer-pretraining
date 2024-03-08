@@ -13,6 +13,10 @@ class ComunicaOptimizerPretraining{
 
     }
 
+    public saveTrainLogToFile(location: string, data: ISearchTrainLog[]){
+      fs.writeFileSync(location, JSON.stringify(data));
+    }
+
     public async createEngine(){
       this.engine = new this.queryEngine();
     }
@@ -134,10 +138,14 @@ class ComunicaOptimizerPretraining{
         if (rc > .5){
           optimizer = 'sgd';
         }
+        console.log(`Train run ${i+1}/${n}`);
         console.log(`Parameters: lr: ${lr}, bs: ${batchSize}, opt: ${optimizer}`);
-        searchTrainLogs.push(await this.runPretraining(trainQueries, trainCardinalities, valQueries, valCardinalities,
-          batchSize, epochs, optimizer, lr, modelDirectory));
+        const trainOutput = await this.runPretraining(trainQueries, trainCardinalities, valQueries, valCardinalities,
+          batchSize, epochs, optimizer, lr, modelDirectory)
+        trainOutput.lr = lr; trainOutput.bSize = batchSize; trainOutput.opt = optimizer;
+        searchTrainLogs.push(trainOutput);
       }
+      return searchTrainLogs;
     }
 
     public randomUniformFromRange(min: number, max: number){
@@ -177,17 +185,18 @@ const cardinalities: number[] = runner.readCardinalities(path.join(__dirname, ".
 const dataset = runner.createTrainValSplit(queries, cardinalities, .8);
 runner.createEngine().then(async () => { 
   console.log(`Number of queries: ${cardinalities.length}, cardinality average: ${runner.mean(runner.scale(cardinalities.map(x => Math.log(x))))} (${runner.std(runner.scale(cardinalities.map(x => Math.log(x))))})`);
-  runner.random_search_hyperparameters(
+  const trainOutput: ISearchTrainLog[] = await runner.random_search_hyperparameters(
     10,
     10,
     [0.00001, 0.001],
-    [2, 4, 8, 16, 32, 64, 128],
-    dataset.trainQueries,
-    dataset.trainCardinalities, 
-    dataset.valQueries,
-    dataset.valCardinalities,
+    [2, 4, 8, 16, 32, 64, 128, 256],
+    dataset.trainQueries.slice(0,50),
+    dataset.trainCardinalities.slice(0,50), 
+    dataset.valQueries.slice(0,10),
+    dataset.valCardinalities.slice(0,10),
     testModelDirectory
   )
+  runner.saveTrainLogToFile(path.join(__dirname, "..", "..", "train-logs/search-logs.txt"), trainOutput)
 });
 
 export type optimizerOptions = "adam" | "sgd";
@@ -199,7 +208,10 @@ export interface IDataSet {
   valCardinalities: number[];
 }
 
-export interface ISearchTrainLog{
+export interface ISearchTrainLog {
+  lr: number
+  bSize: number
+  opt: optimizerOptions
   trainLoss: number[]
   validationError: number[]
 }
