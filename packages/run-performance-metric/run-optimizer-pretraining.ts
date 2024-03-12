@@ -190,10 +190,10 @@ runner.createEngine().then(async () => {
     5,
     [0.00001, 0.001],
     [2, 4, 8, 16, 32, 64, 128, 256],
-    dataset.trainQueries.slice(0,10),
-    dataset.trainCardinalities.slice(0,10), 
-    dataset.valQueries.slice(0,10),
-    dataset.valCardinalities.slice(0,10),
+    dataset.trainQueries,
+    dataset.trainCardinalities, 
+    dataset.valQueries,
+    dataset.valCardinalities,
     testModelDirectory
   )
   runner.saveTrainLogToFile(path.join(__dirname, "..", "..", "train-logs/search-logs.txt"), trainOutput)
