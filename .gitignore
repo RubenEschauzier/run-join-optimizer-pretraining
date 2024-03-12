@@ -13,6 +13,7 @@ logs
 results
 tmp
 
+/train-logs
 # Build
 public/css/main.css
 

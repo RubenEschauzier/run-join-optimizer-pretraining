@@ -187,13 +187,13 @@ runner.createEngine().then(async () => {
   console.log(`Number of queries: ${cardinalities.length}, cardinality average: ${runner.mean(runner.scale(cardinalities.map(x => Math.log(x))))} (${runner.std(runner.scale(cardinalities.map(x => Math.log(x))))})`);
   const trainOutput: ISearchTrainLog[] = await runner.random_search_hyperparameters(
     20,
-    20,
+    5,
     [0.00001, 0.001],
     [2, 4, 8, 16, 32, 64, 128, 256],
-    dataset.trainQueries,
-    dataset.trainCardinalities, 
-    dataset.valQueries,
-    dataset.valCardinalities,
+    dataset.trainQueries.slice(0,10),
+    dataset.trainCardinalities.slice(0,10), 
+    dataset.valQueries.slice(0,10),
+    dataset.valCardinalities.slice(0,10),
     testModelDirectory
   )
   runner.saveTrainLogToFile(path.join(__dirname, "..", "..", "train-logs/search-logs.txt"), trainOutput)
