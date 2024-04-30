@@ -1,0 +1,17 @@
+{
+    "weightLocationGcn": "/weights-gcn",
+    "weightLocationGcnDirected": "/weights-gcn-directed",
+    "weightLocationDense": "/weights-dense",
+    "layers":[
+        {"type": "gcndirected", "inputSize": 394, "outputSize": 512, "activation": "relu"},
+        {"type": "activation", "activation": "relu", "inputSize": 512, "outputSize": 512},
+        {"type": "dropout", "inputSize": 512, "outputSize": 512 , "rate": 0.2},
+        {"type": "gcndirected", "inputSize": 512, "outputSize": 1024},
+        {"type": "activation", "activation": "relu", "inputSize": 1024, "outputSize": 1024},
+        {"type": "dropout", "inputSize": 1024, "outputSize": 1024 , "rate": 0.2},
+        {"type": "dense", "inputSize": 1024, "outputSize": 512},
+        {"type": "activation", "activation": "relu", "inputSize": 512, "outputSize": 512},
+        {"type": "dense", "inputSize": 512, "outputSize": 256},
+        {"type": "activation", "activation": "relu", "inputSize": 256, "outputSize": 256}
+    ]
+}

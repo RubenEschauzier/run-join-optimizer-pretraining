@@ -213,19 +213,15 @@ SELECT ?v0 ?v2 ?v3 WHERE {
 }
 `
 
-// TO TEST: 
-// ONEHOT ENCODING
-// DEEPER NETWORK
-// IMPROVE DATA BY REDUCING ISOMORPHISMS
-const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "onehot-encoded-model-config");
+const testModelDirectory = path.join(__dirname, "..", "..", "model-configs", "full-tp-encoding-model-config");
 const modelWeightLocation = path.join(__dirname, "..", "..", "trained-models");
 const logValidationLocation = path.join(__dirname, "..", "..", "train-logs", "validation-log");
 const sourceLocation = "/home/reschauz/projects/benchmarks/watdiv-dataset/dataset.nt";
 console.log(`Model directory: ${testModelDirectory}`);
 
 const runner = new ComunicaOptimizerPretraining();
-const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "query_strings.json"));
-const cardinalities: number[] = runner.readCardinalities(path.join(__dirname, "..", "..", "data", "query_cardinalities.json"));
+const queries = runner.readQueries(path.join(__dirname, "..", "..", "data", "randomly-generated-dataset", "query_strings.json"));
+const cardinalities: number[] = runner.readCardinalities(path.join(__dirname, "..", "..", "data", "randomly-generated-dataset", "query_cardinalities.json"));
 
 const queriesWatDiv = runner.readQueries(
   path.join(__dirname, "..", "..", "data", "validation-data-watdiv", "query_strings.json")
@@ -234,9 +230,9 @@ const cardinalitiesWatDiv: number[] = runner.readCardinalities(
   path.join(__dirname, "..", "..", "data", "validation-data-watdiv", "query_cardinalities.json")
 );
 
-const dataset = runner.createTrainValSplit(queries, cardinalities, .8);
+const dataset = runner.createTrainValSplit(queries, cardinalities, .9);
 runner.createEngine().then(async () => { 
-  console.log(`Number of queries: ${cardinalities.length}, cardinality average: ${runner.mean(runner.scale(cardinalities.map(x => Math.log(x))))} (${runner.std(runner.scale(cardinalities.map(x => Math.log(x))))})`);
+  console.log(`Number of queries: ${cardinalities.length}, cardinality average: ${runner.mean(cardinalities.map(x => Math.log(x+1)))} (${runner.std(cardinalities.map(x => Math.log(x+1)))})`);
   await runner.runPretraining(
     dataset.trainQueries,
     dataset.trainCardinalities, 
